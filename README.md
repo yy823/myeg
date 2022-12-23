@@ -1,5 +1,5 @@
 # myeg
-###数据清洗
+### 数据清洗
 arXiv、SemanticScholar空字段统一为null，并记录存在空字段记录数以统计字段覆盖率：
 ```js
 db.arXiv.updateMany({ doi: "" }, { $set: { "doi": null }});
@@ -19,7 +19,7 @@ db.SemanticScholar.updateMany({ inCitations: "null" }, { $set: { "inCitations": 
 db.SemanticScholar.updateMany({ outCitations: "null" }, { $set: { "outCitations": null }})
 ```
 SemanticScholar“doi”字段统一格式，拼接特定字符串
-```shell
+```js
 db.SemanticScholar.find({"doi": {$ne:null} }).forEach(function(item){
     db.SemanticScholar.update(
         {"_id":item._id}, 
@@ -28,7 +28,7 @@ db.SemanticScholar.find({"doi": {$ne:null} }).forEach(function(item){
 })
 ```
 统一文件存储路径
-```shell
+```js
 db.arXiv.updateMany(
   {pdf_url:{"$exists":true}},
   [{
@@ -71,30 +71,30 @@ db.SemanticScholar.updateMany(
 )
 ```
 
-###合并操作
+### 合并操作
 
 下载MongoDB Developer Tools，将数据导出为JSON格式存档：
-```shell
+```js
 mongoexport -d IR -c ScienceDirect -o ./SD.json
 mongoexport -d IR -c arXiv -o ./aX.json
 mongoexport -d IR -c SemanticScholar -o ./SS.json
 ```
 
 新建唯一索引title，作为去重依据（存在doi字段为空的记录，故不使用doi去重）：
-```shell
+```js
 db.src.createIndex({title: 1}, {unique: true})
 ```
 
 依次导入之前存档的JSON文件数据（--upsert 会根据唯一索引去掉重复记录）：
-```shell
+```js
 mongooimport -d IR -c ScienceDirect --upsert -o ./SD.json
 mongoexport -d IR -c arXiv --upsert -o ./aX.json
 mongoexport -d IR -c SemanticScholar --upsert -o ./SS.json
 ```
-###统计arXiv表中arxiv_categories字段中各标签记录数
+### 统计arXiv表中arxiv_categories字段中各标签记录数
 
 下载MongoDB Developer Tools，将数据导出为JSON格式存档：
-```shell
+```js
 db.test.aggregate([
   {$unwind:"$arxiv_categories"},
   {$group:{_id:"$arxiv_categories",num_of_tag:{$sum:1}}},
